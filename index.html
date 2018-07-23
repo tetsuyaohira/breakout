@@ -1,10 +1,169 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>$Title$</title>
+    <title>Breakout</title>
+    <script type="text/javascript">
+        'use strict';
+
+        const WIDTH = 600;
+        const HEIGHT = 600;
+        const colors = ['red', 'orange', 'yellow', 'green', 'purple', 'blue'];
+        let ctx, paddle, ball, timer, blocks = [];
+        let balls = 3, score = 0;
+
+        function Ball() {
+            this.x = 0;
+            this.y = HEIGHT + this.r;
+            this.dx = 0;
+            this.dy = 0;
+            this.r = 10;
+            this.dir = 0;
+            this.speed = 10;
+
+            this.move = function () {
+                this.x += this.dx;
+                this.y += this.dy;
+            };
+
+            this.changeDir = function (dir) {
+                this.dir = dir;
+                this.dx = this.speed * Math.cos(dir);
+                this.dy = -this.speed * Math.sin(dir);
+            };
+
+            this.draw = function (ctx) {
+                drawBall(this.x, this.y, this.r);
+            };
+        }
+
+        function Block(x, y, i) {
+            this.x = x;
+            this.y = y;
+            this.w = 50;
+            this.h = 20;
+            this.color = colors[i];
+            this.point = (6 - i) * 10;
+        }
+
+        function Paddle() {
+            this.w = 110;
+            this.h = 20;
+            this.x = (WIDTH - this.w) / 2;
+            this.y = HEIGHT - 20;
+            this.color = 'yellow';
+            this.keyL = false;
+            this.keyR = false;
+        }
+
+        function init() {
+            ctx = document.getElementById('canvas').getContext('2d');
+            ctx.font = '20pt Arial';
+
+            // initial event listener
+            window.addEventListener('keydown', function (e) {
+                toggleKey(e.keyCode, true);
+            }, true);
+            window.addEventListener('keyup', function (e) {
+                toggleKey(e.keyCode, false);
+            }, true);
+
+            // initialize players
+            paddle = new Paddle();
+            ball = new Ball();
+            start();
+
+            if (isNaN(timer)) {
+                timer = setInterval(mainLoop, 15);
+            }
+        }
+
+        function toggleKey(code, flag) {
+            switch (code) {
+                case 37:
+                    paddle.keyL = flag;
+                    break;
+                case 39:
+                    paddle.keyR = flag;
+                    break;
+                case 32:
+                    if (!isPlaying()) {
+                        ball.x = padding.x + padding.w / 2;
+                        ball.y = padding.y - ball.r;
+                        ball.changeDir(Math.random() * Math.PI / 2 + Math.PI / 4);
+                    }
+                    break;
+            }
+        }
+
+        function start() {
+            paddle.w = Math.max(20, paddle.w - 10);
+            ball.speed = Math.min(20, ball.speed + 1);
+
+            // layout blocks
+            for (var i = 0; i < 6; i++) {
+                for (var j = 0; j < 9; j++) {
+                    blocks.push(new Block(j * 60 + 35, i * 30 + 50, i));
+                }
+            }
+        }
+
+        function mainLoop() {
+            // move the paddle
+            if (paddle.keyL) {
+                paddle.x = Math.max(0, paddle.x - 10);
+            }
+            if (paddle.keyR) {
+                paddle.x = Math.min(WIDTH - paddle.w + 10);
+            }
+
+            draw();
+
+            if (!isPlaying()) {
+                return;
+            }
+
+        }
+
+        function isPlaying() {
+            return ball.y < HEIGHT + ball.r;
+
+        }
+
+        function drawBall(x, y, r) {
+            ctx.fillStyle = 'yellow';
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2, true);
+            ctx.fill();
+        }
+
+        function draw() {
+            // fill background
+            ctx.fillStyle = 'rgb(0,0,0)';
+            ctx.fillRect(0,0,WIDTH, HEIGHT);
+
+            // draw paddle
+            blocks.forEach(function (block) {
+                block.draw(ctx);
+            });
+
+            // draw ball
+            ball.draw(ctx);
+            if (balls>2) {drawBall(80,15,10);}
+            if (balls>1) {drawBall(50,15,10);}
+
+            // draw score & information
+            ctx.fillStyle = 'rgb(0,255,0';
+            ctx.fillText(('00000' + score).slice(-5),500,30);
+            if (isNaN(timer)){
+                ctx.fillText('GAME OVER',220,250);
+            }
+        }
+
+
+    </script>
 </head>
-<body>
-$END$
+<body onload="init()">
+<canvas id="canvas" width="600" height="600"/>
 </body>
 </html>
