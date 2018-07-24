@@ -46,7 +46,7 @@
 
         // Block.prototype = Paddle. prototype = { draw: function (ctx) { ctx. fillStyle = this. color; ctx. fillRect( this. x, this. y, this. w, this. h); } }
 
-            function Block(x, y, i) {
+        function Block(x, y, i) {
             this.x = x;
             this.y = y;
             this.w = 50;
@@ -132,6 +132,58 @@
                 return;
             }
 
+            if (ball.y > HEIGHT - paddle.h) {
+                // hit the paddle?
+                if (paddle.x < ball.x && ball.x < paddle.x + paddle.w &&
+                    paddle.y < ball.y && ball.y < paddle.y + paddle.h) {
+                    var ratio = (paddle.x + paddle.w / 2 - ball.x) / paddle.w * 0.8;
+                    ball.changeDir(Math.PI / 2 + Math.PI * ratio);
+                } else {
+                    if (--balls == 0) { // game over
+                        clearInterval(timer);
+                        timer = NaN;
+                        draw();
+                        return;
+                    }
+                    ball.y = HEIGHT + ball.r;
+                }
+            }
+
+            var nx = ball.x + ball.dx;
+            var ny = ball.y - ball.dy;
+
+            // hit the wall?
+            if (ny < ball.r || nx + ball.r > WIDTH) {
+                ball.changeDir(ball.dir * -1);
+            } else if (nx < ball.r || nx + ball.r > WIDTH) {
+                ball.changeDir(Math.PI - ball.dir);
+            }
+
+            // hit a block?
+            var hit = -1;
+            blocks.some(function (block, i) {
+                if (block.x - ball.r < nx && nx < block.x + block.w + ball.r &&
+                    block.y - ball.r < ny && ny < block.y + block.h + ball.r) {
+                    hit = i;
+                    return true;
+                }
+                return false;
+            });
+
+            if (hit >= 0) {
+                score += blocks[hit].point;
+                blocks.splice(hit, 1);
+
+                if (blocks.length <= 0) { // cleared
+                    ball.y = HEIGHT + ball.r;
+                    start();
+                    return;
+                }
+                ball.changeDir(ball.dir * -1);
+            }
+
+
+            ball.move();
 
         }
 
